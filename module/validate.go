@@ -1,11 +1,13 @@
 package module
 
 import (
+	"strings"
+
+	"github.com/envoyproxy/protoc-gen-validate/module/gencontext"
 	"github.com/envoyproxy/protoc-gen-validate/templates"
 	"github.com/envoyproxy/protoc-gen-validate/templates/java"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
-	"strings"
 )
 
 const (
@@ -34,7 +36,8 @@ func (m *Module) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Packag
 	module := m.Parameters().Str(moduleParam)
 
 	// Process file-level templates
-	tpls := templates.Template(m.Parameters())[lang]
+	genCtx := gencontext.New(m, pkgs)
+	tpls := templates.Template(m.Parameters(), genCtx)[lang]
 	m.Assert(tpls != nil, "could not find templates for `lang`: ", lang)
 
 	for _, f := range targets {

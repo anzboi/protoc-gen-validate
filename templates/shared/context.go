@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"text/template"
 
+	"github.com/envoyproxy/protoc-gen-validate/module/gencontext"
 	"github.com/envoyproxy/protoc-gen-validate/validate"
 	pgs "github.com/lyft/protoc-gen-star"
 	"google.golang.org/protobuf/proto"
@@ -23,25 +24,78 @@ type RuleContext struct {
 	AccessorOverride string
 }
 
-func rulesContext(f pgs.Field) (out RuleContext, err error) {
-	out.Field = f
+func rulesContext(genCtx gencontext.GenContext) func(pgs.Field) (RuleContext, error) {
+	return func(f pgs.Field) (out RuleContext, err error) {
+		out.Field = f
 
-	var rules validate.FieldRules
-	if _, err = f.Extension(validate.E_Rules, &rules); err != nil {
+		var rules validate.FieldRules
+		if _, err = f.Extension(validate.E_Rules, &rules); err != nil {
+			return
+		}
+
+		if resource, ok := genCtx.SearchResourceReference(f); ok {
+			if err = mergeResourceValidation(f, resource.NameField(), &rules); err != nil {
+				return
+			}
+		}
+
+		// genCtx.Debugf("rules for %s: %v", f.FullyQualifiedName(), rp)
+
+		var wrapped bool
+		if out.Typ, out.Rules, out.MessageRules, wrapped = resolveRules(f.Type(), &rules); wrapped {
+			out.WrapperTyp = out.Typ
+			out.Typ = "wrapper"
+		}
+
+		if out.Typ == "error" {
+			err = fmt.Errorf("unknown rule type (%T)", rules.Type)
+		}
+
 		return
 	}
+}
 
-	var wrapped bool
-	if out.Typ, out.Rules, out.MessageRules, wrapped = resolveRules(f.Type(), &rules); wrapped {
-		out.WrapperTyp = out.Typ
-		out.Typ = "wrapper"
+// This guys job is to merge validation rules from the resource to the referrer in such a way that makes sense.
+//
+// The main nuanced case is repeated field validation. If the reference field is repeated, we want the field to be able.
+// to define normal repeated field validation (eg: min/max len), which inheriting the per-item validation from the resource.
+//
+// Map fields are not supported. There is no way to know whether validation needs to be on the keys or values.
+func mergeResourceValidation(base pgs.Field, resource pgs.Field, rules *validate.FieldRules) error {
+	var resValidation *validate.FieldRules
+
+	if ok, err := resource.Extension(validate.E_Rules, &resValidation); err != nil {
+		return err
+	} else if !ok {
+		return nil
 	}
 
-	if out.Typ == "error" {
-		err = fmt.Errorf("unknown rule type (%T)", rules.Type)
+	if proto.Equal(rules, &validate.FieldRules{}) && base.Type().IsRepeated() {
+		// if the field is repeated and the annotation does not exist, we need to create it
+		rules.Type = &validate.FieldRules_Repeated{Repeated: &validate.RepeatedRules{}}
 	}
 
-	return
+	switch t := rules.GetType().(type) {
+	case *validate.FieldRules_Repeated:
+		// This will preseve any other repeated validation already existing (eg: min/max len)
+		t.Repeated.Items = resValidation
+		return nil
+	default:
+		// we only want to override this field
+		makeValidationIgnoreEmpty(resValidation)
+		rules.Type = resValidation.Type
+	}
+	return nil
+}
+
+func makeValidationIgnoreEmpty(rules *validate.FieldRules) {
+	ignore := true
+	switch t := rules.GetType().(type) {
+	case *validate.FieldRules_String_:
+		t.String_.IgnoreEmpty = &ignore
+	case *validate.FieldRules_Bytes:
+		t.Bytes.IgnoreEmpty = &ignore
+	}
 }
 
 func (ctx RuleContext) Key(name, idx string) (out RuleContext, err error) {
