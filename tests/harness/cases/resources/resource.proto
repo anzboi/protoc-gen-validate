@@ -1,0 +1,25 @@
+syntax = 'proto3'
+
+package tests.harness.cases.resources;
+
+option go_package = "github.com/envoyproxy/protoc-gen-validate/tests/harness/cases/resources/go;resources";
+
+import "google/api/resource.proto";
+import "validate/validate.proto";
+
+message Resource {
+    option (google.api.resource) = {
+        type: "resource.example.com/Resource"
+        pattern: "resources/{resource}"
+    };
+    string name = 1 [(validate.rules).string.pattern = "^resources/\\d{7,9}$"];
+}
+
+message Referrer {
+    string resource = 1 [(google.api.resource_reference).type = "resource.example.com/Resource"];
+    repeated string resources = 2 [(google.api.resource_reference).type = "resource.example.com/Resource"];
+    repeated string resource_list_with_limits = 3 [
+        (google.api.resource_reference).type = "resource.example.com/Resource"
+        (validate.rules).repeated = {min_items: 1, max_items: 2}
+    ];
+}

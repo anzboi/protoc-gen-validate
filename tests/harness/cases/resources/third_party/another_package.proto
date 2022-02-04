@@ -1,0 +1,11 @@
+syntax = 'proto3'
+
+package tests.harness.cases.resources.third_party;
+
+option go_package = "github.com/envoyproxy/protoc-gen-validate/tests/harness/cases/resources/third_party/go;third_party";
+
+import "google/api/resource.proto";
+
+message ReferrerFromAnotherFile {
+    string resource = 1 [(google.api.resource_reference).type = "resource.example.com/Resource"];
+}

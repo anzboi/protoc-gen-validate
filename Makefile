@@ -13,6 +13,11 @@ GO_IMPORT_SPACES := ${VALIDATE_IMPORT},\
 	Mgoogle/protobuf/descriptor.proto=google.golang.org/protobuf/types/descriptorpb
 GO_IMPORT:=$(subst $(space),,$(GO_IMPORT_SPACES))
 
+ifeq (, $(shell which go))
+$(error "No 'go' executable in $(PATH)")
+endif
+GOBIN?=$(shell go env GOPATH)/bin
+
 .DEFAULT_GOAL := help
 
 .PHONY: help
@@ -84,7 +89,7 @@ testcases: bin/protoc-gen-go ## generate the test harness case protos
 		-I . \
 		-I ../../../.. \
 		--go_out="module=${PACKAGE}/tests/harness/cases/other_package/go,${GO_IMPORT}:./go" \
-		--plugin=protoc-gen-go=${GOPATH}/bin/protoc-gen-go \
+		--plugin=protoc-gen-go=${GOBIN}/protoc-gen-go \
 		--validate_out="module=${PACKAGE}/tests/harness/cases/other_package/go,lang=go:./go" \
 		./*.proto
 	cd tests/harness/cases/yet_another_package && \
@@ -92,7 +97,7 @@ testcases: bin/protoc-gen-go ## generate the test harness case protos
 		-I . \
 		-I ../../../.. \
 		--go_out="module=${PACKAGE}/tests/harness/cases/yet_another_package/go,${GO_IMPORT}:./go" \
-		--plugin=protoc-gen-go=${GOPATH}/bin/protoc-gen-go \
+		--plugin=protoc-gen-go=${GOBIN}/protoc-gen-go \
 		--validate_out="module=${PACKAGE}/tests/harness/cases/yet_another_package/go,lang=go:./go" \
 		./*.proto
 	cd tests/harness/cases && \
@@ -100,20 +105,20 @@ testcases: bin/protoc-gen-go ## generate the test harness case protos
 		-I . \
 		-I ../../.. \
 		--go_out="module=${PACKAGE}/tests/harness/cases/go,Mtests/harness/cases/other_package/embed.proto=${PACKAGE}/tests/harness/cases/other_package/go;other_package,Mtests/harness/cases/yet_another_package/embed.proto=${PACKAGE}/tests/harness/cases/yet_another_package/go,${GO_IMPORT}:./go" \
-		--plugin=protoc-gen-go=${GOPATH}/bin/protoc-gen-go \
+		--plugin=protoc-gen-go=${GOBIN}/protoc-gen-go \
 		--validate_out="module=${PACKAGE}/tests/harness/cases/go,lang=go,Mtests/harness/cases/other_package/embed.proto=${PACKAGE}/tests/harness/cases/other_package/go,Mtests/harness/cases/yet_another_package/embed.proto=${PACKAGE}/tests/harness/cases/yet_another_package/go:./go" \
 		./*.proto
 
 validate/validate.pb.go: bin/protoc-gen-go validate/validate.proto
 	protoc -I . \
-		--plugin=protoc-gen-go=${GOPATH}/bin/protoc-gen-go \
+		--plugin=protoc-gen-go=${GOBIN}/protoc-gen-go \
 		--go_opt=paths=source_relative \
 		--go_out="${GO_IMPORT}:." validate/validate.proto
 
 tests/harness/go/harness.pb.go: bin/protoc-gen-go tests/harness/harness.proto
 	# generates the test harness protos
 	cd tests/harness && protoc -I . \
-		--plugin=protoc-gen-go=${GOPATH}/bin/protoc-gen-go \
+		--plugin=protoc-gen-go=${GOBIN}/protoc-gen-go \
 		--go_out="module=${PACKAGE}/tests/harness/go,${GO_IMPORT}:./go" harness.proto
 
 tests/harness/go/main/go-harness:
