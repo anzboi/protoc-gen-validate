@@ -3,12 +3,12 @@ package templates
 import (
 	"text/template"
 
-	"github.com/envoyproxy/protoc-gen-validate/module/gencontext"
-	"github.com/envoyproxy/protoc-gen-validate/templates/cc"
-	"github.com/envoyproxy/protoc-gen-validate/templates/ccnop"
-	golang "github.com/envoyproxy/protoc-gen-validate/templates/go"
-	"github.com/envoyproxy/protoc-gen-validate/templates/java"
-	"github.com/envoyproxy/protoc-gen-validate/templates/shared"
+	"github.com/anzboi/protoc-gen-validate/module/gencontext"
+	"github.com/anzboi/protoc-gen-validate/templates/cc"
+	"github.com/anzboi/protoc-gen-validate/templates/ccnop"
+	golang "github.com/anzboi/protoc-gen-validate/templates/go"
+	"github.com/anzboi/protoc-gen-validate/templates/java"
+	"github.com/anzboi/protoc-gen-validate/templates/shared"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 )

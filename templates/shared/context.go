@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/envoyproxy/protoc-gen-validate/module/gencontext"
-	"github.com/envoyproxy/protoc-gen-validate/validate"
+	"github.com/anzboi/protoc-gen-validate/module/gencontext"
+	"github.com/anzboi/protoc-gen-validate/validate"
 	pgs "github.com/lyft/protoc-gen-star"
 	"google.golang.org/protobuf/proto"
 )

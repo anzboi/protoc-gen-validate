@@ -33,7 +33,7 @@ py_proto_library(
 
 go_proto_library(
     name = "validate_go_proto",
-    importpath = "github.com/envoyproxy/protoc-gen-validate/validate",
+    importpath = "github.com/anzboi/protoc-gen-validate/validate",
     proto = ":validate_proto",
 )
 
@@ -45,7 +45,7 @@ cc_library(
 go_library(
     name = "validate_go",
     embed = [":validate_go_proto"],
-    importpath = "github.com/envoyproxy/protoc-gen-validate/validate",
+    importpath = "github.com/anzboi/protoc-gen-validate/validate",
 )
 
 java_proto_library(

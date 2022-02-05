@@ -3,9 +3,9 @@ package module
 import (
 	"strings"
 
-	"github.com/envoyproxy/protoc-gen-validate/module/gencontext"
-	"github.com/envoyproxy/protoc-gen-validate/templates"
-	"github.com/envoyproxy/protoc-gen-validate/templates/java"
+	"github.com/anzboi/protoc-gen-validate/module/gencontext"
+	"github.com/anzboi/protoc-gen-validate/templates"
+	"github.com/anzboi/protoc-gen-validate/templates/java"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 )

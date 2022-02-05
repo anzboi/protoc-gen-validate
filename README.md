@@ -71,7 +71,7 @@ Installing PGV can currently only be done from source:
 
 ```sh
 # fetches this repo into $GOPATH
-go get -d github.com/envoyproxy/protoc-gen-validate
+go get -d github.com/anzboi/protoc-gen-validate
 
 # installs PGV into $GOPATH/bin
 make build
@@ -95,7 +95,7 @@ Go generation should occur into the same output path as the official plugin. For
 protoc \
   -I . \
   -I ${GOPATH}/src \
-  -I ${GOPATH}/src/github.com/envoyproxy/protoc-gen-validate \
+  -I ${GOPATH}/src/github.com/anzboi/protoc-gen-validate \
   --go_out=":../generated" \
   --validate_out="lang=go:../generated" \
   example.proto
@@ -867,7 +867,7 @@ bazel test //tests/...
 
 ### Docker
 
-PGV comes with a [Dockerfile](/Dockerfile) for consistent development tooling and CI. The main entrypoint is `make` with `quick` as the default target. This repo should be volumed into `/go/src/github.com/envoyproxy/protoc-gen-validate` for the proper behavior.
+PGV comes with a [Dockerfile](/Dockerfile) for consistent development tooling and CI. The main entrypoint is `make` with `quick` as the default target. This repo should be volumed into `/go/src/github.com/anzboi/protoc-gen-validate` for the proper behavior.
 
 ```sh
 # build the image
@@ -875,12 +875,12 @@ docker build -t lyft/protoc-gen-validate .
 
 # executes the default make target: quick
 docker run --rm \
-  -v $(PWD):/go/src/github.com/envoyproxy/protoc-gen-validate \
+  -v $(PWD):/go/src/github.com/anzboi/protoc-gen-validate \
   lyft/protoc-gen-validate
 
 # executes the 'build' & 'generate-testdata' make targets
 docker run --rm \
-  -v $(PWD):/go/src/github.com/envoyproxy/protoc-gen-validate \
+  -v $(PWD):/go/src/github.com/anzboi/protoc-gen-validate \
   lyft/protoc-gen-validate \
   build generate-testdata
 ```

@@ -47,7 +47,7 @@ proto_library(
 
 pgv_go_proto_library(
     name = "go",
-    importpath = "github.com/envoyproxy/protoc-gen-validate/tests/harness/cases/go",
+    importpath = "github.com/anzboi/protoc-gen-validate/tests/harness/cases/go",
     proto = ":cases_proto",
     deps = [
         "//tests/harness/cases/other_package:go",

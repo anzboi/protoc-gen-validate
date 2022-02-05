@@ -3,7 +3,7 @@ package shared
 import (
 	"text/template"
 
-	"github.com/envoyproxy/protoc-gen-validate/module/gencontext"
+	"github.com/anzboi/protoc-gen-validate/module/gencontext"
 	pgs "github.com/lyft/protoc-gen-star"
 )
 

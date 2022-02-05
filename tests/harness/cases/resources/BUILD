@@ -21,7 +21,7 @@ proto_library(
 
 pgv_go_proto_library(
     name = "go",
-    importpath = "github.com/envoyproxy/protoc-gen-validate/tests/harness/cases/resources/go",
+    importpath = "github.com/anzboi/protoc-gen-validate/tests/harness/cases/resources/go",
     proto = ":embed_proto",
     deps = [
         "@org_golang_google_protobuf//types/known/anypb:go_default_library",
@@ -43,7 +43,7 @@ proto_library(
 
 go_proto_library(
     name = "resources_go_proto",
-    importpath = "github.com/envoyproxy/protoc-gen-validate/tests/harness/cases/resources",
+    importpath = "github.com/anzboi/protoc-gen-validate/tests/harness/cases/resources",
     proto = ":resources_proto",
     visibility = ["//visibility:public"],
     deps = ["//validate:go_default_library"],
@@ -52,7 +52,7 @@ go_proto_library(
 go_library(
     name = "go_default_library",
     embed = [":resources_go_proto"],
-    importpath = "github.com/envoyproxy/protoc-gen-validate/tests/harness/cases/resources",
+    importpath = "github.com/anzboi/protoc-gen-validate/tests/harness/cases/resources",
     visibility = ["//visibility:public"],
 )
 

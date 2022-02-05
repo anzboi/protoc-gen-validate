@@ -16,7 +16,7 @@ proto_library(
 
 go_proto_library(
     name = "harness_go_proto",
-    importpath = "github.com/envoyproxy/protoc-gen-validate/tests/harness/go",
+    importpath = "github.com/anzboi/protoc-gen-validate/tests/harness/go",
     proto = ":harness_proto",
     visibility = ["//visibility:public"],
 )
@@ -38,7 +38,7 @@ java_proto_library(
 go_library(
     name = "go_default_library",
     embed = [":harness_go_proto"],
-    importpath = "github.com/envoyproxy/protoc-gen-validate/tests/harness",
+    importpath = "github.com/anzboi/protoc-gen-validate/tests/harness",
     visibility = ["//visibility:public"],
 )
 

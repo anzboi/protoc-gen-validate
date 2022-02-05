@@ -49,7 +49,7 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@${PGG_VER}
 # buildozer
 RUN go get github.com/bazelbuild/buildtools/buildozer
 
-WORKDIR ${GOPATH}/src/github.com/envoyproxy/protoc-gen-validate
+WORKDIR ${GOPATH}/src/github.com/anzboi/protoc-gen-validate
 COPY . .
 
 # python must be on PATH for the execution of py_binary bazel targets, but
