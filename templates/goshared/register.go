@@ -349,24 +349,19 @@ func (fns goSharedFuncs) enumPackages(enums []pgs.Enum) map[pgs.Name]pgs.FilePat
 	return out
 }
 
-func (fns goSharedFuncs) enumType(enum pgs.Enum) string {
-	// walk up parents until we hit a file object
-
-	str := string(enum.Name())
-	var parent pgs.Entity
-findFile:
-	for {
-		parent = enum.Parent()
-		switch t := parent.(type) {
-		case pgs.Message:
-			str = string(t.Name()) + "_" + str
-		case pgs.File:
-			break findFile
-		default:
-			panic("enum can only appear under file or message")
-		}
+func walkEnumParents(parent pgs.ParentEntity, name string) string {
+	switch t := parent.(type) {
+	case pgs.Message:
+		return walkEnumParents(t.Parent(), string(t.Name())+"_"+name)
+	case pgs.File:
+		return name
+	default:
+		panic("enum parent can only resolve to message or file")
 	}
-	return str
+}
+
+func (fns goSharedFuncs) enumType(enum pgs.Enum) string {
+	return walkEnumParents(enum.Parent(), string(enum.Name()))
 }
 
 func (fns goSharedFuncs) snakeCase(name string) string {
