@@ -49,6 +49,7 @@ func Register(tpl *template.Template, params pgs.Parameters) {
 		"unwrap":        fns.unwrap,
 		"externalEnums": fns.externalEnums,
 		"enumPackages":  fns.enumPackages,
+		"enumType":      fns.enumType,
 	})
 
 	template.Must(tpl.New("msg").Parse(msgTpl))
@@ -346,6 +347,26 @@ func (fns goSharedFuncs) enumPackages(enums []pgs.Enum) map[pgs.Name]pgs.FilePat
 	}
 
 	return out
+}
+
+func (fns goSharedFuncs) enumType(enum pgs.Enum) string {
+	// walk up parents until we hit a file object
+
+	str := string(enum.Name())
+	var parent pgs.Entity
+findFile:
+	for {
+		parent = enum.Parent()
+		switch t := parent.(type) {
+		case pgs.Message:
+			str = string(t.Name()) + "_" + str
+		case pgs.File:
+			break findFile
+		default:
+			panic("enum can only appear under file or message")
+		}
+	}
+	return str
 }
 
 func (fns goSharedFuncs) snakeCase(name string) string {
