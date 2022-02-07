@@ -349,6 +349,10 @@ func (fns goSharedFuncs) enumPackages(enums []pgs.Enum) map[pgs.Name]pgs.FilePat
 	return out
 }
 
+// recursively walks up the parents of the enum until it reaches the root file
+// prepends 'Message_' for each message it sees on the way. This builds up the generated enum type name.
+//
+// intended to be used by the enumType function to build the generate type name.
 func walkEnumParents(parent pgs.ParentEntity, name string) string {
 	switch t := parent.(type) {
 	case pgs.Message:

@@ -3,11 +3,13 @@ package shared
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/anzboi/protoc-gen-validate/module/gencontext"
 	"github.com/anzboi/protoc-gen-validate/validate"
 	pgs "github.com/lyft/protoc-gen-star"
+	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -29,12 +31,22 @@ func rulesContext(genCtx gencontext.GenContext) func(pgs.Field) (RuleContext, er
 		out.Field = f
 
 		var rules validate.FieldRules
-		if _, err = f.Extension(validate.E_Rules, &rules); err != nil {
+		var ok bool
+		if ok, err = f.Extension(validate.E_Rules, &rules); err != nil {
 			return
+		} else if !ok {
+			var resourceDesc annotations.ResourceDescriptor
+			if ok, err = f.Message().Extension(annotations.E_Resource, &resourceDesc); err != nil {
+				return
+			} else if ok && string(f.Name()) == resourceNameField(resourceDesc.NameField) {
+				// at this point, we have found a field that IS a resource name field but has no validation
+				// we grab validation from the resource pattern
+				rules.Type = &validate.FieldRules_String_{String_: basicResourceValidation(&resourceDesc)}
+			}
 		}
 
 		if resource, ok := genCtx.SearchResourceReference(f); ok {
-			if err = mergeResourceValidation(f, resource.NameField(), &rules); err != nil {
+			if err = mergeResourceValidation(f, resource.NameField(), resource.ResourceDescriptor(), &rules); err != nil {
 				return
 			}
 		}
@@ -61,17 +73,18 @@ func rulesContext(genCtx gencontext.GenContext) func(pgs.Field) (RuleContext, er
 // to define normal repeated field validation (eg: min/max len), which inheriting the per-item validation from the resource.
 //
 // Map fields are not supported. There is no way to know whether validation needs to be on the keys or values.
-func mergeResourceValidation(base pgs.Field, resource pgs.Field, rules *validate.FieldRules) error {
+func mergeResourceValidation(base pgs.Field, resource pgs.Field, resourceDesc *annotations.ResourceDescriptor, rules *validate.FieldRules) error {
 	var resValidation *validate.FieldRules
+	emptyRules := &validate.FieldRules{}
 
 	if ok, err := resource.Extension(validate.E_Rules, &resValidation); err != nil {
 		return err
 	} else if !ok {
-		return nil
+		resValidation = &validate.FieldRules{Type: &validate.FieldRules_String_{String_: basicResourceValidation(resourceDesc)}}
 	}
 
-	if proto.Equal(rules, &validate.FieldRules{}) && base.Type().IsRepeated() {
-		// if the field is repeated and the annotation does not exist, we need to create it
+	// if the field we are targeting repeated and the annotation does not exist, we need to create it to fill it later
+	if proto.Equal(rules, emptyRules) && base.Type().IsRepeated() {
 		rules.Type = &validate.FieldRules_Repeated{Repeated: &validate.RepeatedRules{}}
 	}
 
@@ -86,6 +99,52 @@ func mergeResourceValidation(base pgs.Field, resource pgs.Field, rules *validate
 		rules.Type = resValidation.Type
 	}
 	return nil
+}
+
+// build a regular expression for resource validation based on the given pattern
+//
+// This is not as good as having a regex provided by field validation, but its something
+//
+// regex is structured as a logical OR of all given patterns. For each pattern, splits it into path
+// elements and detects if the path element is a variable by curly brackets. For path variables, regex
+// allows any number (at least 1) character. for non variables, enforces an exact match.
+func basicResourceValidation(resourceDesc *annotations.ResourceDescriptor) *validate.StringRules {
+	regex := strings.Builder{}
+	patterns := resourceDesc.GetPattern()
+
+	// build the regex
+	regex.WriteString(`^(`)
+	for i, pattern := range patterns {
+		regex.WriteString(`\A`)
+		split := strings.Split(pattern, "/")
+		for j, elem := range split {
+			if elem[0] == '{' && elem[len(elem)-1] == '}' {
+				regex.WriteString(`[^/]+`)
+			} else {
+				regex.WriteString(elem)
+			}
+			if j != len(split)-1 {
+				regex.WriteRune('/')
+			}
+		}
+		// regex += `\z`
+		if i != len(patterns)-1 {
+			regex.WriteString(`\z|`)
+		} else {
+			regex.WriteString(`\z`)
+		}
+	}
+	regex.WriteString(`)$`)
+	final := regex.String()
+	ignoreEmpty := true
+	return &validate.StringRules{Pattern: &final, IgnoreEmpty: &ignoreEmpty}
+}
+
+func resourceNameField(s string) string {
+	if s == "" {
+		return "name"
+	}
+	return s
 }
 
 func makeValidationIgnoreEmpty(rules *validate.FieldRules) {
